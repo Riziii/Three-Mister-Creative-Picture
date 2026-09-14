@@ -1,7 +1,7 @@
 import React from 'react';
 
 export const LOGO_URL = "https://ihqoctaqlxqtzxcriltf.supabase.co/storage/v1/object/public/Three%20Mister/Submark%20Primary%20Logo%203mr%20(No%20Background).png";
-export const LOCAL_LOGO_URL = "/logo-3mr.png";
+export const LOCAL_LOGO_URL = `${(import.meta as any).env?.BASE_URL || './'}logo-3mr.png`;
 
 interface LogoProps {
   className?: string;
@@ -32,7 +32,7 @@ export function Logo3MR({ className = '', size = 'md', showBadge = false }: Logo
       referrerPolicy="no-referrer"
       onError={(e) => {
         // Fallback to locally cached file if external CDN fails or is blocked
-        if (e.currentTarget.src !== window.location.origin + LOCAL_LOGO_URL) {
+        if (!e.currentTarget.src.includes('logo-3mr.png')) {
           e.currentTarget.src = LOCAL_LOGO_URL;
         }
       }}
@@ -61,7 +61,7 @@ export function Logo3MRVector({ className = 'w-10 h-10', title = 'Three Mister 3
       className={`object-contain select-none ${className}`}
       referrerPolicy="no-referrer"
       onError={(e) => {
-        if (e.currentTarget.src !== window.location.origin + LOCAL_LOGO_URL) {
+        if (!e.currentTarget.src.includes('logo-3mr.png')) {
           e.currentTarget.src = LOCAL_LOGO_URL;
         }
       }}
