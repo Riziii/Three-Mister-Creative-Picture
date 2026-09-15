@@ -13,7 +13,8 @@ import {
   ChevronRight,
   RefreshCw,
   Sun,
-  Moon
+  Moon,
+  Clock
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@/src/lib/utils";
@@ -103,15 +104,68 @@ export default function App() {
     return 'light';
   });
 
+  // Real-time WIB (Waktu Indonesia Barat - UTC+7) Clock
+  const [wibTime, setWibTime] = useState<{ time: string; date: string }>(() => {
+    const formatWIB = () => {
+      const now = new Date();
+      const time = new Intl.DateTimeFormat('id-ID', {
+        timeZone: 'Asia/Jakarta',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+      }).format(now).replace(/\./g, ':');
+      const date = new Intl.DateTimeFormat('id-ID', {
+        timeZone: 'Asia/Jakarta',
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      }).format(now);
+      return { time, date };
+    };
+    return formatWIB();
+  });
+
+  // Tick WIB time every second
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      const time = new Intl.DateTimeFormat('id-ID', {
+        timeZone: 'Asia/Jakarta',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+      }).format(now).replace(/\./g, ':');
+      const date = new Intl.DateTimeFormat('id-ID', {
+        timeZone: 'Asia/Jakarta',
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      }).format(now);
+      setWibTime({ time, date });
+    };
+
+    const timer = setInterval(updateTime, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   // Sync theme changes with DOM and localStorage
   useEffect(() => {
     const root = document.documentElement;
+    const body = document.body;
     if (theme === 'dark') {
       root.classList.add('dark');
+      body.classList.add('dark');
     } else {
       root.classList.remove('dark');
+      body.classList.remove('dark');
     }
-    localStorage.setItem('theme', theme);
+    try {
+      localStorage.setItem('theme', theme);
+    } catch (e) {}
   }, [theme]);
 
   const toggleTheme = () => {
@@ -306,6 +360,7 @@ export default function App() {
           </div>
           
           <div className="flex items-center gap-2 sm:gap-3">
+            {/* Tabs */}
             <div className="flex bg-gray-100 dark:bg-slate-900 p-1 rounded-lg border border-gray-200 dark:border-slate-800 transition-colors">
               <button
                 id="tab-generate"
@@ -335,43 +390,57 @@ export default function App() {
               </button>
             </div>
 
-            {/* Theme Toggle Button */}
-            <button
-              id="theme-toggle-btn"
-              type="button"
-              onClick={toggleTheme}
-              aria-label={theme === 'dark' ? "Beralih ke mode terang" : "Beralih ke mode gelap"}
-              title={theme === 'dark' ? "Mode Terang (Light Mode)" : "Mode Gelap (Dark Mode)"}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-800 hover:border-gray-300 dark:hover:border-slate-700 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-maroon/20 dark:focus:ring-red-500/20"
+            {/* Theme Segmented Switcher */}
+            <div 
+              id="theme-toggle-group"
+              className="flex items-center bg-gray-100 dark:bg-slate-900 p-1 rounded-lg border border-gray-200 dark:border-slate-800 transition-colors"
+              role="group"
+              aria-label="Pilihan mode tampilan"
             >
-              <AnimatePresence mode="wait" initial={false}>
-                {theme === 'dark' ? (
-                  <motion.div
-                    key="sun-icon"
-                    initial={{ scale: 0.6, rotate: -90, opacity: 0 }}
-                    animate={{ scale: 1, rotate: 0, opacity: 1 }}
-                    exit={{ scale: 0.6, rotate: 90, opacity: 0 }}
-                    transition={{ duration: 0.15 }}
-                    className="flex items-center gap-1.5 text-amber-400"
-                  >
-                    <Sun className="w-4 h-4" />
-                    <span className="text-xs font-medium hidden sm:inline text-slate-200">Terang</span>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="moon-icon"
-                    initial={{ scale: 0.6, rotate: 90, opacity: 0 }}
-                    animate={{ scale: 1, rotate: 0, opacity: 1 }}
-                    exit={{ scale: 0.6, rotate: -90, opacity: 0 }}
-                    transition={{ duration: 0.15 }}
-                    className="flex items-center gap-1.5 text-slate-700"
-                  >
-                    <Moon className="w-4 h-4" />
-                    <span className="text-xs font-medium hidden sm:inline text-slate-700">Gelap</span>
-                  </motion.div>
+              <button
+                id="theme-btn-light"
+                type="button"
+                onClick={() => setTheme('light')}
+                aria-pressed={theme === 'light'}
+                title="Aktifkan Mode Terang"
+                className={cn(
+                  "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all duration-200",
+                  theme === 'light'
+                    ? "bg-white text-slate-900 shadow-sm font-semibold"
+                    : "text-gray-500 hover:text-slate-900"
                 )}
-              </AnimatePresence>
-            </button>
+              >
+                <Sun className={cn("w-3.5 h-3.5", theme === 'light' ? "text-amber-500" : "text-gray-400")} />
+                <span className="hidden sm:inline">Terang</span>
+              </button>
+              <button
+                id="theme-btn-dark"
+                type="button"
+                onClick={() => setTheme('dark')}
+                aria-pressed={theme === 'dark'}
+                title="Aktifkan Mode Gelap"
+                className={cn(
+                  "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all duration-200",
+                  theme === 'dark'
+                    ? "bg-slate-800 text-white shadow-sm font-semibold"
+                    : "text-slate-400 hover:text-white"
+                )}
+              >
+                <Moon className={cn("w-3.5 h-3.5", theme === 'dark' ? "text-indigo-400" : "text-gray-400")} />
+                <span className="hidden sm:inline">Gelap</span>
+              </button>
+            </div>
+
+            {/* Real-time WIB Clock in Far Right of Top Taskbar */}
+            <div 
+              id="taskbar-wib-clock"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-[#580001]/5 dark:bg-[#580001]/25 border border-[#580001]/20 dark:border-[#580001]/50 text-xs font-medium text-[#580001] dark:text-[#ff999b] transition-colors shadow-xs"
+              title={`Zona Waktu Indonesia Barat (WIB): ${wibTime.date}`}
+            >
+              <Clock className="w-3.5 h-3.5 animate-pulse text-[#580001] dark:text-[#ff8082] flex-shrink-0" />
+              <span className="font-mono font-bold tracking-wider">{wibTime.time}</span>
+              <span className="text-[10px] font-semibold text-[#580001]/80 dark:text-[#ff999b]/80">WIB</span>
+            </div>
           </div>
         </div>
       </header>
@@ -636,6 +705,31 @@ export default function App() {
           </div>
         </div>
       </main>
+
+      {/* Footer with Copyright (#580001) */}
+      <footer 
+        id="app-footer" 
+        className="mt-16 border-t border-gray-200/80 dark:border-slate-800 bg-white/80 dark:bg-slate-950/90 backdrop-blur-md transition-colors py-8"
+      >
+        <div className="max-w-7xl mx-auto px-4 flex flex-col items-center justify-center text-center space-y-3">
+          {/* Logo Brand in Center */}
+          <div className="flex items-center justify-center gap-2">
+            <div className="p-1 bg-white rounded-lg shadow-sm border border-gray-200/80">
+              <Logo3MR size="sm" />
+            </div>
+            <span className="font-display font-bold text-sm tracking-tight text-slate-800 dark:text-slate-100">
+              Three Mister <span className="text-[#580001] dark:text-[#ff8082]">3MR</span>
+            </span>
+          </div>
+
+          {/* Copyright Notice centered in maroon #580001 */}
+          <div className="flex flex-wrap items-center justify-center gap-1 text-sm font-semibold text-[#580001] dark:text-[#ff8082] tracking-wide">
+            <span>&copy; {new Date().getFullYear()}</span>
+            <span className="font-bold">Three Mister Create Picture.</span>
+            <span>Hak Cipta Dilindungi.</span>
+          </div>
+        </div>
+      </footer>
 
       <style>{`
         .custom-scrollbar::-webkit-scrollbar {

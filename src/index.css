@@ -1,22 +1,35 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
-@custom-variant dark (&:where(.dark, .dark *));
+@variant dark (&:where(.dark, .dark *));
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Outfit", sans-serif;
   --font-logo: "Anton", "Impact", "Bebas Neue", sans-serif;
-  --color-maroon: #800000;
-  --color-maroon-dark: #630808;
-  --color-maroon-light: #a52a2a;
+  --color-maroon: #580001;
+  --color-maroon-dark: #3a0001;
+  --color-maroon-light: #7b0a0b;
 }
 
-@layer base {
-  body {
-    @apply bg-white text-slate-900 font-sans transition-colors duration-200;
-  }
-  html.dark body {
-    @apply bg-slate-950 text-slate-100;
-  }
+html {
+  color-scheme: light;
 }
+
+html.dark {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background-color: #ffffff;
+  color: #0f172a;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+html.dark body {
+  background-color: #020617;
+  color: #f8fafc;
+}
+
