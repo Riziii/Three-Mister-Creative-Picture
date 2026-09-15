@@ -11,9 +11,7 @@ import {
   ExternalLink,
   Info,
   ChevronRight,
-  RefreshCw,
-  Sun,
-  Moon
+  RefreshCw
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@/src/lib/utils";
@@ -50,32 +48,6 @@ export default function App() {
   const [currentImage, setCurrentImage] = useState<GeneratedImage | null>(null);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [error, setError] = useState<string | null>(null);
-
-  // Mode Siang dan Malam (Light / Dark mode)
-  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem("three_mister_theme");
-      if (saved === 'dark' || saved === 'light') return saved;
-      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        return 'dark';
-      }
-    }
-    return 'light';
-  });
-
-  useEffect(() => {
-    const root = document.documentElement;
-    if (theme === 'dark') {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
-    }
-    localStorage.setItem("three_mister_theme", theme);
-  }, [theme]);
-
-  const toggleTheme = () => {
-    setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
-  };
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -251,71 +223,50 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-white dark:bg-zinc-950 text-slate-900 dark:text-slate-100 selection:bg-maroon/10 transition-colors duration-200">
+    <div className="min-h-screen bg-white text-slate-900 selection:bg-maroon/10">
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-gray-100 dark:border-zinc-800/80 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md transition-colors">
+      <header className="sticky top-0 z-50 border-b border-gray-100 bg-white/80 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center bg-white dark:bg-zinc-900 border border-gray-200/90 dark:border-zinc-800 rounded-xl p-1.5 shadow-sm hover:shadow transition-shadow">
+            <div className="flex items-center justify-center bg-white border border-gray-200/90 rounded-xl p-1.5 shadow-sm hover:shadow transition-shadow">
               <Logo3MR size="md" />
             </div>
             <div className="flex flex-col">
-              <h1 className="text-lg font-display font-bold tracking-tight text-slate-900 dark:text-white leading-none">
-                Three Mister <span className="text-maroon dark:text-red-500">Create Picture</span>
+              <h1 className="text-lg font-display font-bold tracking-tight text-slate-900 leading-none">
+                Three Mister <span className="text-maroon">Create Picture</span>
               </h1>
-              <span className="text-[10px] text-gray-400 dark:text-zinc-500 font-medium tracking-wider uppercase mt-1">
+              <span className="text-[10px] text-gray-400 font-medium tracking-wider uppercase mt-1">
                 Official AI Art Generator
               </span>
             </div>
           </div>
           
-          <div className="flex items-center gap-2 sm:gap-3">
-            {/* Tab Switcher (Buat / Cari) */}
-            <div className="flex bg-gray-100 dark:bg-zinc-900 p-1 rounded-lg border border-gray-200 dark:border-zinc-800">
-              <button
-                onClick={() => setActiveTab('generate')}
-                className={cn(
-                  "px-3 sm:px-4 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all duration-200 flex items-center gap-1.5 sm:gap-2",
-                  activeTab === 'generate' 
-                    ? "bg-white dark:bg-zinc-800 text-maroon dark:text-red-400 shadow-sm font-semibold" 
-                    : "text-gray-500 dark:text-zinc-400 hover:text-maroon dark:hover:text-red-400"
-                )}
-              >
-                <ImageIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                Buat
-              </button>
-              <button
-                onClick={() => setActiveTab('search')}
-                className={cn(
-                  "px-3 sm:px-4 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all duration-200 flex items-center gap-1.5 sm:gap-2",
-                  activeTab === 'search' 
-                    ? "bg-white dark:bg-zinc-800 text-maroon dark:text-red-400 shadow-sm font-semibold" 
-                    : "text-gray-500 dark:text-zinc-400 hover:text-maroon dark:hover:text-red-400"
-                )}
-              >
-                <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                Cari
-              </button>
-            </div>
-
-            {/* Tombol Mode Siang / Malam */}
+          <div className="flex bg-gray-100 p-1 rounded-lg border border-gray-200">
             <button
-              onClick={toggleTheme}
-              aria-label={theme === 'dark' ? "Ganti ke Mode Siang" : "Ganti ke Mode Malam"}
-              title={theme === 'dark' ? "Mode Siang (Light Mode)" : "Mode Malam (Dark Mode)"}
-              className="p-2 sm:p-2.5 rounded-lg border border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900 hover:bg-gray-100 dark:hover:bg-zinc-850 text-slate-700 dark:text-amber-400 transition-all duration-200 active:scale-95 shadow-2xs flex items-center justify-center cursor-pointer"
-            >
-              {theme === 'dark' ? (
-                <Sun className="w-4 h-4 text-amber-400 transition-transform duration-300 hover:rotate-45" />
-              ) : (
-                <Moon className="w-4 h-4 text-slate-600 transition-transform duration-300 hover:-rotate-12" />
+              onClick={() => setActiveTab('generate')}
+              className={cn(
+                "px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200 flex items-center gap-2",
+                activeTab === 'generate' ? "bg-white text-maroon shadow-sm" : "text-gray-500 hover:text-maroon"
               )}
+            >
+              <ImageIcon className="w-4 h-4" />
+              Buat
+            </button>
+            <button
+              onClick={() => setActiveTab('search')}
+              className={cn(
+                "px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200 flex items-center gap-2",
+                activeTab === 'search' ? "bg-white text-maroon shadow-sm" : "text-gray-500 hover:text-maroon"
+              )}
+            >
+              <Search className="w-4 h-4" />
+              Cari
             </button>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-8 md:py-12 flex-1 w-full">
+      <main className="max-w-7xl mx-auto px-4 py-8 md:py-12">
         <div className="grid lg:grid-cols-[1fr_350px] gap-12">
           {/* Left Column: Input & Results */}
           <div className="space-y-8">
@@ -325,12 +276,12 @@ export default function App() {
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   placeholder={activeTab === 'generate' ? "Deskripsikan gambar yang ingin Anda buat..." : "Cari gambar bebas hak cipta (misal: pemandangan gunung)"}
-                  className="w-full bg-gray-50 dark:bg-zinc-900/90 border border-gray-200 dark:border-zinc-800 rounded-2xl p-6 pr-16 text-lg focus:outline-none focus:ring-2 focus:ring-maroon/20 dark:focus:ring-red-500/20 focus:border-maroon dark:focus:border-red-500 transition-all min-h-[120px] resize-none placeholder:text-gray-400 dark:placeholder:text-zinc-500 text-slate-900 dark:text-slate-100"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-6 pr-16 text-lg focus:outline-none focus:ring-2 focus:ring-maroon/20 focus:border-maroon transition-all min-h-[120px] resize-none placeholder:text-gray-400"
                 />
                 <button
                   onClick={activeTab === 'generate' ? handleGenerate : handleSearch}
                   disabled={isGenerating || !prompt.trim()}
-                  className="absolute bottom-4 right-4 w-12 h-12 bg-maroon hover:bg-maroon-light disabled:bg-gray-100 dark:disabled:bg-zinc-800 disabled:text-gray-400 dark:disabled:text-zinc-600 rounded-xl flex items-center justify-center transition-all active:scale-95 shadow-lg shadow-maroon/20 dark:shadow-none cursor-pointer"
+                  className="absolute bottom-4 right-4 w-12 h-12 bg-maroon hover:bg-maroon-light disabled:bg-gray-100 disabled:text-gray-400 rounded-xl flex items-center justify-center transition-all active:scale-95 shadow-lg shadow-maroon/20"
                 >
                   {isGenerating ? (
                     <Loader2 className="w-6 h-6 animate-spin text-white" />
@@ -340,14 +291,14 @@ export default function App() {
                 </button>
               </div>
               
-              <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-zinc-400 px-2">
+              <div className="flex items-center gap-4 text-xs text-gray-500 px-2">
                 <div className="flex items-center gap-1">
                   <Info className="w-3 h-3" />
                   <span>{activeTab === 'generate' ? "AI akan membuat gambar baru untuk Anda." : "Mencari sumber gambar gratis."}</span>
                 </div>
                 {activeTab === 'generate' && (
                   <div className="flex items-center gap-1">
-                    <Sparkles className="w-3 h-3 text-maroon dark:text-red-400" />
+                    <Sparkles className="w-3 h-3 text-maroon" />
                     <span>Bebas hak cipta</span>
                   </div>
                 )}
@@ -361,7 +312,7 @@ export default function App() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  className="p-4 bg-red-50 dark:bg-red-950/40 border border-red-100 dark:border-red-900/50 rounded-xl text-red-600 dark:text-red-400 text-sm flex items-center gap-3"
+                  className="p-4 bg-red-50 border border-red-100 rounded-xl text-red-600 text-sm flex items-center gap-3"
                 >
                   <Info className="w-5 h-5 flex-shrink-0" />
                   {error}
@@ -373,7 +324,7 @@ export default function App() {
                   key={currentImage.id}
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="group relative aspect-square max-w-2xl mx-auto bg-gray-50 dark:bg-zinc-900 rounded-3xl overflow-hidden border border-gray-100 dark:border-zinc-800 shadow-xl"
+                  className="group relative aspect-square max-w-2xl mx-auto bg-gray-50 rounded-3xl overflow-hidden border border-gray-100 shadow-xl"
                 >
                   <img
                     src={currentImage.url}
@@ -389,7 +340,7 @@ export default function App() {
                       </div>
                       <button
                         onClick={() => downloadImage(currentImage.url, `three-mister-${currentImage.id}.png`)}
-                        className="p-5 bg-maroon text-white rounded-2xl hover:scale-110 transition-all shadow-2xl flex items-center justify-center group/btn cursor-pointer"
+                        className="p-5 bg-maroon text-white rounded-2xl hover:scale-110 transition-all shadow-2xl flex items-center justify-center group/btn"
                         title="Download Masterpiece"
                       >
                         <Download className="w-8 h-8 group-hover/btn:animate-bounce" />
@@ -411,46 +362,46 @@ export default function App() {
                       href={result.uri}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="p-4 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl hover:border-maroon/50 dark:hover:border-red-500/50 hover:bg-gray-50 dark:hover:bg-zinc-850 transition-all group flex items-start justify-between gap-4 shadow-sm"
+                      className="p-4 bg-white border border-gray-200 rounded-2xl hover:border-maroon/50 hover:bg-gray-50 transition-all group flex items-start justify-between gap-4 shadow-sm"
                     >
                       <div className="space-y-1 overflow-hidden">
-                        <h3 className="font-medium text-slate-900 dark:text-slate-100 truncate">{result.title}</h3>
-                        <p className="text-xs text-gray-500 dark:text-zinc-400 truncate">{result.uri}</p>
+                        <h3 className="font-medium text-slate-900 truncate">{result.title}</h3>
+                        <p className="text-xs text-gray-500 truncate">{result.uri}</p>
                       </div>
-                      <ExternalLink className="w-4 h-4 text-gray-400 dark:text-zinc-500 group-hover:text-maroon dark:group-hover:text-red-400 flex-shrink-0 mt-1" />
+                      <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-maroon flex-shrink-0 mt-1" />
                     </a>
                   ))}
                 </motion.div>
               )}
 
               {!currentImage && !isGenerating && activeTab === 'generate' && !error && (
-                <div className="aspect-square max-w-2xl mx-auto border-2 border-dashed border-gray-200 dark:border-zinc-800 rounded-3xl flex flex-col items-center justify-center text-gray-400 dark:text-zinc-500 space-y-4 p-8">
-                  <div className="p-4 rounded-2xl bg-gray-50 dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 flex items-center justify-center shadow-2xs">
+                <div className="aspect-square max-w-2xl mx-auto border-2 border-dashed border-gray-200 rounded-3xl flex flex-col items-center justify-center text-gray-400 space-y-4 p-8">
+                  <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center">
                     <Logo3MR size="xl" />
                   </div>
                   <div className="text-center space-y-1">
-                    <p className="text-sm font-medium text-slate-700 dark:text-zinc-300">Studio Pembuat Gambar 3MR</p>
-                    <p className="text-xs text-gray-400 dark:text-zinc-500 max-w-sm">Tulis deskripsi di atas untuk membuat masterpiece anime hyper-detailed berkualitas tinggi</p>
+                    <p className="text-sm font-medium text-slate-700">Studio Pembuat Gambar 3MR</p>
+                    <p className="text-xs text-gray-400 max-w-sm">Tulis deskripsi di atas untuk membuat masterpiece anime hyper-detailed berkualitas tinggi</p>
                   </div>
                 </div>
               )}
 
               {searchResults.length === 0 && !isGenerating && activeTab === 'search' && !error && (
-                <div className="aspect-square max-w-2xl mx-auto border-2 border-dashed border-gray-200 dark:border-zinc-800 rounded-3xl flex flex-col items-center justify-center text-gray-400 dark:text-zinc-500 space-y-4">
+                <div className="aspect-square max-w-2xl mx-auto border-2 border-dashed border-gray-200 rounded-3xl flex flex-col items-center justify-center text-gray-400 space-y-4">
                   <Search className="w-16 h-16 opacity-20" />
                   <p className="text-sm">Cari gambar bebas hak cipta di atas</p>
                 </div>
               )}
               
               {isGenerating && (
-                <div className="aspect-square max-w-2xl mx-auto bg-gray-50 dark:bg-zinc-900 rounded-3xl flex flex-col items-center justify-center space-y-6 animate-pulse border border-gray-100 dark:border-zinc-800">
+                <div className="aspect-square max-w-2xl mx-auto bg-gray-50 rounded-3xl flex flex-col items-center justify-center space-y-6 animate-pulse border border-gray-100">
                   <div className="relative">
-                    <div className="w-16 h-16 border-4 border-maroon/10 dark:border-red-500/10 border-t-maroon dark:border-t-red-500 rounded-full animate-spin" />
-                    <Sparkles className="absolute inset-0 m-auto w-6 h-6 text-maroon dark:text-red-400 animate-pulse" />
+                    <div className="w-16 h-16 border-4 border-maroon/10 border-t-maroon rounded-full animate-spin" />
+                    <Sparkles className="absolute inset-0 m-auto w-6 h-6 text-maroon animate-pulse" />
                   </div>
                   <div className="text-center space-y-2">
-                    <p className="text-maroon dark:text-red-400 font-medium">Sedang memproses...</p>
-                    <p className="text-xs text-gray-500 dark:text-zinc-400">AI sedang merajut piksel untuk Anda</p>
+                    <p className="text-maroon font-medium">Sedang memproses...</p>
+                    <p className="text-xs text-gray-500">AI sedang merajut piksel untuk Anda</p>
                   </div>
                 </div>
               )}
@@ -460,7 +411,7 @@ export default function App() {
           {/* Right Column: History */}
           <div className="space-y-6">
             <div className="flex items-center justify-between px-2">
-              <div className="flex items-center gap-2 text-gray-500 dark:text-zinc-400">
+              <div className="flex items-center gap-2 text-gray-500">
                 <History className="w-4 h-4" />
                 <h2 className="text-sm font-semibold uppercase tracking-wider">
                   {activeTab === 'generate' ? 'Riwayat Buat' : 'Riwayat Cari'}
@@ -469,7 +420,7 @@ export default function App() {
               {(activeTab === 'generate' ? history.length > 0 : searchHistory.length > 0) && (
                 <button
                   onClick={clearHistory}
-                  className="p-2 text-gray-400 dark:text-zinc-500 hover:text-red-500 dark:hover:text-red-400 transition-colors cursor-pointer"
+                  className="p-2 text-gray-400 hover:text-red-500 transition-colors"
                   title="Hapus Semua"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -480,8 +431,8 @@ export default function App() {
             <div className="space-y-4 max-h-[calc(100vh-250px)] overflow-y-auto pr-2 custom-scrollbar">
               {activeTab === 'generate' ? (
                 history.length === 0 ? (
-                  <div className="p-8 text-center border border-gray-100 dark:border-zinc-800 rounded-2xl bg-gray-50 dark:bg-zinc-900/50">
-                    <p className="text-xs text-gray-500 dark:text-zinc-400">Belum ada riwayat gambar.</p>
+                  <div className="p-8 text-center border border-gray-100 rounded-2xl bg-gray-50">
+                    <p className="text-xs text-gray-500">Belum ada riwayat gambar.</p>
                   </div>
                 ) : (
                   history.map((item) => (
@@ -493,8 +444,8 @@ export default function App() {
                       className={cn(
                         "group relative p-3 rounded-2xl border transition-all cursor-pointer shadow-sm",
                         currentImage?.id === item.id 
-                          ? "bg-maroon/5 dark:bg-maroon/20 border-maroon/20 dark:border-maroon/50" 
-                          : "bg-white dark:bg-zinc-900 border-gray-100 dark:border-zinc-800 hover:border-maroon/20 dark:hover:border-maroon/40"
+                          ? "bg-maroon/5 border-maroon/20" 
+                          : "bg-white border-gray-100 hover:border-maroon/20"
                       )}
                       onClick={() => {
                         setCurrentImage(item);
@@ -502,7 +453,7 @@ export default function App() {
                       }}
                     >
                       <div className="flex gap-4">
-                        <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 dark:bg-zinc-800">
+                        <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
                           <img
                             src={item.url}
                             alt=""
@@ -511,10 +462,10 @@ export default function App() {
                           />
                         </div>
                         <div className="flex-1 min-w-0 py-1">
-                          <p className="text-xs text-slate-800 dark:text-zinc-200 line-clamp-2 mb-1">
+                          <p className="text-xs text-slate-800 line-clamp-2 mb-1">
                             {item.prompt}
                           </p>
-                          <p className="text-[10px] text-gray-400 dark:text-zinc-500">
+                          <p className="text-[10px] text-gray-400">
                             {new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </p>
                         </div>
@@ -524,7 +475,7 @@ export default function App() {
                           e.stopPropagation();
                           downloadImage(item.url, `three-mister-${item.id}.png`);
                         }}
-                        className="absolute top-2 right-2 p-2 bg-white dark:bg-zinc-800 text-gray-400 dark:text-zinc-400 rounded-lg opacity-0 group-hover:opacity-100 hover:text-maroon dark:hover:text-red-400 transition-all shadow-sm border border-gray-100 dark:border-zinc-700 cursor-pointer"
+                        className="absolute top-2 right-2 p-2 bg-white text-gray-400 rounded-lg opacity-0 group-hover:opacity-100 hover:text-maroon transition-all shadow-sm border border-gray-100"
                       >
                         <Download className="w-3.5 h-3.5" />
                       </button>
@@ -533,8 +484,8 @@ export default function App() {
                 )
               ) : (
                 searchHistory.length === 0 ? (
-                  <div className="p-8 text-center border border-gray-100 dark:border-zinc-800 rounded-2xl bg-gray-50 dark:bg-zinc-900/50">
-                    <p className="text-xs text-gray-500 dark:text-zinc-400">Belum ada riwayat pencarian.</p>
+                  <div className="p-8 text-center border border-gray-100 rounded-2xl bg-gray-50">
+                    <p className="text-xs text-gray-500">Belum ada riwayat pencarian.</p>
                   </div>
                 ) : (
                   searchHistory.map((item) => (
@@ -546,8 +497,8 @@ export default function App() {
                       className={cn(
                         "group relative p-4 rounded-2xl border transition-all cursor-pointer shadow-sm",
                         searchResults === item.results
-                          ? "bg-maroon/5 dark:bg-maroon/20 border-maroon/20 dark:border-maroon/50" 
-                          : "bg-white dark:bg-zinc-900 border-gray-100 dark:border-zinc-800 hover:border-maroon/20 dark:hover:border-maroon/40"
+                          ? "bg-maroon/5 border-maroon/20" 
+                          : "bg-white border-gray-100 hover:border-maroon/20"
                       )}
                       onClick={() => {
                         setSearchResults(item.results);
@@ -556,14 +507,14 @@ export default function App() {
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs font-medium text-slate-800 dark:text-zinc-200 truncate mb-1">
+                          <p className="text-xs font-medium text-slate-800 truncate mb-1">
                             {item.query}
                           </p>
-                          <p className="text-[10px] text-gray-400 dark:text-zinc-500">
+                          <p className="text-[10px] text-gray-400">
                             {item.results.length} hasil • {new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </p>
                         </div>
-                        <Search className="w-3 h-3 text-gray-400 dark:text-zinc-500" />
+                        <Search className="w-3 h-3 text-gray-400" />
                       </div>
                     </motion.div>
                   ))
@@ -573,18 +524,6 @@ export default function App() {
           </div>
         </div>
       </main>
-
-      {/* Footer Hak Cipta */}
-      <footer className="mt-auto py-6 border-t border-gray-100 dark:border-zinc-800/80 bg-white/70 dark:bg-zinc-950/70 transition-colors">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col items-center justify-center text-center">
-          <p 
-            style={{ color: '#580001' }} 
-            className="text-xs sm:text-sm font-bold tracking-wide select-none"
-          >
-            © 2026 Three Mister. All rights reserved.
-          </p>
-        </div>
-      </footer>
 
       <style>{`
         .custom-scrollbar::-webkit-scrollbar {
@@ -600,14 +539,7 @@ export default function App() {
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
           background: #cbd5e1;
         }
-        .dark .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #27272a;
-        }
-        .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #3f3f46;
-        }
       `}</style>
     </div>
   );
 }
-
