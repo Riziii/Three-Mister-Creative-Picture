@@ -1,6 +1,6 @@
 {
   "name": "Three Mister Create Picture",
-  "description": "Aplikasi khusus pembuat foto AI dengan gaya anime hyper-detailed berkualitas masterpiece.",
+  "description": "Aplikasi khusus pembuat foto AI dengan gaya anime hyper-detailed berkualitas masterpiece, dengan dukungan mode terang dan gelap.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
