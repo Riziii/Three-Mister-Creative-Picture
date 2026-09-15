@@ -42,7 +42,7 @@ export function Logo3MR({ className = '', size = 'md', showBadge = false }: Logo
   if (showBadge) {
     return (
       <div 
-        className={`inline-flex items-center justify-center bg-white border border-gray-200/90 shadow-sm hover:shadow transition-shadow ${badgeWrapper[size]}`}
+        className={`inline-flex items-center justify-center bg-white dark:bg-zinc-900 border border-gray-200/90 dark:border-zinc-800 shadow-sm hover:shadow transition-shadow ${badgeWrapper[size]}`}
         title="Three Mister 3MR Logo"
       >
         {logoImg}
