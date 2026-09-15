@@ -14,22 +14,26 @@ npm run dev
 
 Buka peramban di `http://localhost:3000`.
 
-## 🌐 Panduan Deployment ke GitHub Pages
+## 🌐 Panduan Deployment ke GitHub Pages (Folder `/docs`)
 
-Proyek ini telah dikonfigurasi secara otomatis untuk GitHub Pages:
+Folder `/docs` sudah siap pakai dan terkompilasi penuh dengan aset produksi terbaru:
 
-### Metode 1: Melalui Pengaturan GitHub Pages (Paling Mudah)
-1. **Push / Commit** seluruh berkas proyek ini ke branch `main` repositori GitHub Anda.
-2. Buka repositori Anda di GitHub: **Settings** > **Pages**.
+### Langkah Mudah Deployment (Pengaturan GitHub Pages):
+1. **Push / Commit** seluruh berkas proyek ke repositori GitHub Anda (bisa langsung melalui tombol Sync/Push di AI Studio).
+2. Buka repositori Anda di situs GitHub: masuk ke menu **Settings** > **Pages**.
 3. Pada bagian **Build and deployment**:
-   - **Source**: Pilih `Deploy from a branch`.
-   - **Branch**: Pilih `main` dan pilih folder `/docs`.
-   - Klik **Save**.
-4. Selesai! Website Anda akan otomatis online dalam 1–2 menit di `https://<username>.github.io/<repository-name>/`.
+   - **Source**: Pilih **Deploy from a branch**
+   - **Branch**: Pilih `main` (atau `master`)
+   - **Folder**: Pilih `/docs`
+   - Klik **Save**
+4. Selesai! Website Anda akan aktif di `https://<username>.github.io/<repository-name>/` dalam 1–2 menit.
 
-### Metode 2: Menggunakan Perintah deploy (`gh-pages`)
-Jika Anda bekerja dari komputer lokal:
+---
+
+### Alternatif: Deployment via `gh-pages` (Komputer Lokal)
 ```bash
 npm run deploy
 ```
-Perintah ini akan mengompilasi proyek dan mengunggahnya langsung ke branch deployment.
+
+> **Tips Jika Tampilan Belum Berubah**:
+> Peramban web sering menyimpan cache halaman lama. Lakukan *hard refresh* dengan menekan `Ctrl + Shift + R` (Windows/Linux) atau `Cmd + Shift + R` (Mac).

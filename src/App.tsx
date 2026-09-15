@@ -45,9 +45,49 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<'generate' | 'search'>('generate');
   const [prompt, setPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
-  const [history, setHistory] = useState<GeneratedImage[]>([]);
-  const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
-  const [currentImage, setCurrentImage] = useState<GeneratedImage | null>(null);
+  const [history, setHistory] = useState<GeneratedImage[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem("three_mister_history") || localStorage.getItem("pixfree_history");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) return parsed;
+        }
+      } catch (e) {
+        console.error("Failed to parse history", e);
+      }
+    }
+    return [];
+  });
+
+  const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem("three_mister_search_history") || localStorage.getItem("pixfree_search_history");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) return parsed;
+        }
+      } catch (e) {
+        console.error("Failed to parse search history", e);
+      }
+    }
+    return [];
+  });
+
+  const [currentImage, setCurrentImage] = useState<GeneratedImage | null>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem("three_mister_history") || localStorage.getItem("pixfree_history");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed[0];
+        }
+      } catch (e) {}
+    }
+    return null;
+  });
+
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -80,35 +120,30 @@ export default function App() {
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Load history from local storage
+  // Save history to local storage with quota fallback
   useEffect(() => {
-    const savedHistory = localStorage.getItem("pixfree_history");
-    const savedSearchHistory = localStorage.getItem("pixfree_search_history");
-    
-    if (savedHistory) {
+    try {
+      localStorage.setItem("three_mister_history", JSON.stringify(history));
+      localStorage.setItem("pixfree_history", JSON.stringify(history));
+    } catch (e) {
+      console.warn("Storage quota exceeded, trimming old items to fit:", e);
       try {
-        setHistory(JSON.parse(savedHistory));
-      } catch (e) {
-        console.error("Failed to parse history", e);
+        const trimmed = history.slice(0, 15);
+        localStorage.setItem("three_mister_history", JSON.stringify(trimmed));
+        localStorage.setItem("pixfree_history", JSON.stringify(trimmed));
+      } catch (err2) {
+        console.error("Failed to save even trimmed history:", err2);
       }
     }
-
-    if (savedSearchHistory) {
-      try {
-        setSearchHistory(JSON.parse(savedSearchHistory));
-      } catch (e) {
-        console.error("Failed to parse search history", e);
-      }
-    }
-  }, []);
-
-  // Save history to local storage
-  useEffect(() => {
-    localStorage.setItem("pixfree_history", JSON.stringify(history));
   }, [history]);
 
   useEffect(() => {
-    localStorage.setItem("pixfree_search_history", JSON.stringify(searchHistory));
+    try {
+      localStorage.setItem("three_mister_search_history", JSON.stringify(searchHistory));
+      localStorage.setItem("pixfree_search_history", JSON.stringify(searchHistory));
+    } catch (e) {
+      console.warn("Storage quota exceeded for search history:", e);
+    }
   }, [searchHistory]);
 
   const addToHistory = (img: GeneratedImage) => {
