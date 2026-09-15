@@ -14,7 +14,15 @@ import {
   RefreshCw,
   Sun,
   Moon,
-  Clock
+  Clock,
+  KeyRound,
+  Eye,
+  EyeOff,
+  Check,
+  AlertCircle,
+  X,
+  ShieldCheck,
+  ShieldAlert
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@/src/lib/utils";
@@ -91,6 +99,67 @@ export default function App() {
 
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [error, setError] = useState<string | null>(null);
+
+  // Client-side API Key Management for deployed site (GitHub Pages) & dev preview
+  const [customApiKey, setCustomApiKey] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('three_mister_custom_api_key') || localStorage.getItem('gemini_api_key') || '';
+    }
+    return '';
+  });
+  const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
+  const [apiKeyInput, setApiKeyInput] = useState('');
+  const [apiKeyMessage, setApiKeyMessage] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
+  const [showApiKeyText, setShowApiKeyText] = useState(false);
+
+  // Helper to obtain the active API key safely
+  const getEffectiveApiKey = () => {
+    if (customApiKey && customApiKey.trim()) return customApiKey.trim();
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('three_mister_custom_api_key') || localStorage.getItem('gemini_api_key');
+      if (stored && stored.trim()) return stored.trim();
+    }
+    const envKey = process.env.GEMINI_API_KEY || (import.meta as any).env?.VITE_GEMINI_API_KEY;
+    if (envKey && typeof envKey === 'string' && envKey.trim()) return envKey.trim();
+    return '';
+  };
+
+  const handleSaveApiKey = (keyToSave: string) => {
+    const cleaned = keyToSave.trim();
+    if (!cleaned) {
+      setApiKeyMessage({ type: 'error', text: 'Kunci API tidak boleh kosong.' });
+      return;
+    }
+    if (!cleaned.startsWith('AIzaSy')) {
+      setApiKeyMessage({ type: 'error', text: 'Format API Key biasanya diawali dengan "AIzaSy...". Pastikan kunci yang disalin benar.' });
+      return;
+    }
+    try {
+      localStorage.setItem('three_mister_custom_api_key', cleaned);
+      setCustomApiKey(cleaned);
+      setApiKeyMessage({ type: 'success', text: 'Kunci API berhasil disimpan secara aman di peramban Anda!' });
+      setError(null);
+      setTimeout(() => {
+        setIsApiKeyModalOpen(false);
+        setApiKeyMessage(null);
+      }, 1200);
+    } catch (e) {
+      setApiKeyMessage({ type: 'error', text: 'Gagal menyimpan ke penyimpanan lokal browser.' });
+    }
+  };
+
+  const handleRemoveApiKey = () => {
+    try {
+      localStorage.removeItem('three_mister_custom_api_key');
+      localStorage.removeItem('gemini_api_key');
+      setCustomApiKey('');
+      setApiKeyInput('');
+      setApiKeyMessage({ type: 'success', text: 'Kunci API berhasil dihapus dari browser.' });
+      setTimeout(() => {
+        setApiKeyMessage(null);
+      }, 1500);
+    } catch (e) {}
+  };
 
   // Theme state: 'light' or 'dark'
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -235,9 +304,15 @@ export default function App() {
     setSearchResults([]);
 
     try {
-      const apiKey = process.env.GEMINI_API_KEY || (import.meta as any).env?.VITE_GEMINI_API_KEY;
+      const apiKey = getEffectiveApiKey();
       if (!apiKey) {
-        throw new Error("API Key Gemini tidak ditemukan. Pastikan GEMINI_API_KEY atau VITE_GEMINI_API_KEY telah dikonfigurasi.");
+        setApiKeyInput('');
+        setApiKeyMessage({
+          type: 'error',
+          text: 'Silakan masukkan API Key Gemini Anda untuk membuat gambar di website ini.'
+        });
+        setIsApiKeyModalOpen(true);
+        throw new Error("API Key Gemini belum dikonfigurasi. Silakan klik 'Kunci API' di taskbar atas.");
       }
 
       const ai = new GoogleGenAI({ apiKey });
@@ -279,7 +354,23 @@ export default function App() {
       }
     } catch (err: any) {
       console.error(err);
-      setError(err.message || "Terjadi kesalahan saat membuat gambar.");
+      const errMsg = err?.message || String(err);
+      const isLeaked = errMsg.includes("leaked") || errMsg.includes("Your API key was reported as leaked");
+      const isPermissionOrInvalid = errMsg.includes("403") || errMsg.includes("PERMISSION_DENIED") || errMsg.includes("API key not valid") || errMsg.includes("API_KEY_INVALID");
+
+      if (isLeaked || isPermissionOrInvalid) {
+        setApiKeyInput(customApiKey || '');
+        setApiKeyMessage({
+          type: 'error',
+          text: isLeaked 
+            ? 'API Key sebelumnya telah dilaporkan bocor (leaked) oleh Google dan otomatis dinonaktifkan. Silakan buat dan masukkan API Key baru dari Google AI Studio.'
+            : 'API Key tidak valid atau izin ditolak (403). Silakan periksa atau masukkan API Key Gemini baru yang aktif.'
+        });
+        setIsApiKeyModalOpen(true);
+        setError("API Key Gemini tidak valid atau telah dicabut (leaked). Klik 'Atur Kunci API' untuk memasukkan kunci baru yang aktif.");
+      } else {
+        setError(errMsg || "Terjadi kesalahan saat membuat gambar.");
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -292,14 +383,20 @@ export default function App() {
     setSearchResults([]);
 
     try {
-      const apiKey = process.env.GEMINI_API_KEY || (import.meta as any).env?.VITE_GEMINI_API_KEY;
+      const apiKey = getEffectiveApiKey();
       if (!apiKey) {
-        throw new Error("API Key Gemini tidak ditemukan. Pastikan GEMINI_API_KEY atau VITE_GEMINI_API_KEY telah dikonfigurasi.");
+        setApiKeyInput('');
+        setApiKeyMessage({
+          type: 'error',
+          text: 'Silakan masukkan API Key Gemini Anda untuk mencari referensi gambar.'
+        });
+        setIsApiKeyModalOpen(true);
+        throw new Error("API Key Gemini belum dikonfigurasi.");
       }
 
       const ai = new GoogleGenAI({ apiKey });
       const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-2.5-flash",
         contents: `Cari gambar bebas hak cipta (royalty-free) untuk: "${prompt}". Berikan daftar link dari situs seperti Unsplash, Pexels, atau Pixabay.`,
         config: {
           tools: [{ googleSearch: {} }],
@@ -325,7 +422,23 @@ export default function App() {
       }
     } catch (err: any) {
       console.error(err);
-      setError(err.message || "Terjadi kesalahan saat mencari gambar.");
+      const errMsg = err?.message || String(err);
+      const isLeaked = errMsg.includes("leaked") || errMsg.includes("Your API key was reported as leaked");
+      const isPermissionOrInvalid = errMsg.includes("403") || errMsg.includes("PERMISSION_DENIED") || errMsg.includes("API key not valid") || errMsg.includes("API_KEY_INVALID");
+
+      if (isLeaked || isPermissionOrInvalid) {
+        setApiKeyInput(customApiKey || '');
+        setApiKeyMessage({
+          type: 'error',
+          text: isLeaked 
+            ? 'API Key sebelumnya telah dilaporkan bocor (leaked) oleh Google dan otomatis dinonaktifkan. Silakan buat dan masukkan API Key baru dari Google AI Studio.'
+            : 'API Key tidak valid atau izin ditolak (403). Silakan periksa atau masukkan API Key Gemini baru yang aktif.'
+        });
+        setIsApiKeyModalOpen(true);
+        setError("API Key Gemini tidak valid atau telah dicabut (leaked). Klik 'Atur Kunci API' untuk memasukkan kunci baru yang aktif.");
+      } else {
+        setError(errMsg || "Terjadi kesalahan saat mencari gambar.");
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -431,6 +544,33 @@ export default function App() {
               </button>
             </div>
 
+            {/* API Key Configuration Button */}
+            <button
+              id="taskbar-api-key-btn"
+              type="button"
+              onClick={() => {
+                setApiKeyInput(customApiKey || '');
+                setApiKeyMessage(null);
+                setIsApiKeyModalOpen(true);
+              }}
+              title="Konfigurasi API Key Gemini agar dapat diakses di website yang dideploy"
+              className={cn(
+                "flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg border text-xs font-medium transition-all shadow-xs",
+                customApiKey
+                  ? "bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:border-emerald-500/40"
+                  : "bg-amber-50/80 dark:bg-amber-950/30 border-amber-300 dark:border-amber-700/60 text-amber-800 dark:text-amber-300 hover:bg-amber-100"
+              )}
+            >
+              <KeyRound className={cn("w-3.5 h-3.5", customApiKey ? "text-emerald-500" : "text-amber-600 dark:text-amber-400 animate-pulse")} />
+              <span className="hidden md:inline">Kunci API</span>
+              <span 
+                className={cn(
+                  "w-1.5 h-1.5 rounded-full",
+                  customApiKey ? "bg-emerald-500" : "bg-amber-500 animate-ping"
+                )} 
+              />
+            </button>
+
             {/* Real-time WIB Clock in Far Right of Top Taskbar */}
             <div 
               id="taskbar-wib-clock"
@@ -493,10 +633,29 @@ export default function App() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  className="p-4 bg-red-50 dark:bg-red-950/40 border border-red-100 dark:border-red-900/50 rounded-xl text-red-600 dark:text-red-300 text-sm flex items-center gap-3"
+                  className="p-4 bg-red-50 dark:bg-red-950/40 border border-red-200/80 dark:border-red-900/60 rounded-2xl text-red-700 dark:text-red-300 text-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs"
                 >
-                  <Info className="w-5 h-5 flex-shrink-0" />
-                  {error}
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 flex-shrink-0 text-red-600 dark:text-red-400 mt-0.5" />
+                    <div className="space-y-0.5">
+                      <p className="font-semibold">{error}</p>
+                      <p className="text-xs text-red-600/80 dark:text-red-400/80">
+                        Kunci API disimpan secara lokal di peramban Anda sehingga tidak akan pernah bocor lagi ke GitHub.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setApiKeyInput(customApiKey || '');
+                      setApiKeyMessage(null);
+                      setIsApiKeyModalOpen(true);
+                    }}
+                    className="px-3.5 py-1.5 rounded-lg bg-maroon hover:bg-maroon-dark dark:bg-red-600 dark:hover:bg-red-500 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs flex-shrink-0"
+                  >
+                    <KeyRound className="w-3.5 h-3.5" />
+                    <span>Atur Kunci API</span>
+                  </button>
                 </motion.div>
               )}
 
@@ -705,6 +864,163 @@ export default function App() {
           </div>
         </div>
       </main>
+
+      {/* API Key Modal for Deployed Website (GitHub Pages) */}
+      <AnimatePresence>
+        {isApiKeyModalOpen && (
+          <div 
+            id="api-key-modal-overlay"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setIsApiKeyModalOpen(false);
+              }
+            }}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="w-full max-w-lg bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden p-6 space-y-5"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="api-key-dialog-title"
+            >
+              {/* Modal Header */}
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-maroon/10 dark:bg-red-950/40 text-maroon dark:text-red-400">
+                    <KeyRound className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 id="api-key-dialog-title" className="text-base font-bold text-slate-900 dark:text-white">
+                      Pengaturan Kunci API Gemini
+                    </h3>
+                    <p className="text-xs text-gray-500 dark:text-slate-400">
+                      Untuk akses pembuatan foto di website yang dideploy
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsApiKeyModalOpen(false)}
+                  className="p-1.5 rounded-lg text-gray-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Explanatory Banner */}
+              <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/50 text-xs text-amber-800 dark:text-amber-300 space-y-1.5">
+                <div className="flex items-center gap-1.5 font-semibold">
+                  <ShieldAlert className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0" />
+                  <span>Mengapa Kunci API Dibutuhkan?</span>
+                </div>
+                <p className="text-amber-700/90 dark:text-amber-300/90 leading-relaxed">
+                  Google otomatis mencabut (revoke) kunci API jika terdeteksi di repositori publik GitHub (error <em>leaked</em>). 
+                  Dengan memasukkan kunci di sini, kunci disimpan secara privat di peramban Anda (<em>localStorage</em>) dan <strong>tidak akan pernah bocor lagi ke GitHub</strong>.
+                </p>
+              </div>
+
+              {/* Step 1: Link to Google AI Studio */}
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">
+                  1. Dapatkan API Key Baru (Gratis):
+                </label>
+                <a
+                  href="https://aistudio.google.com/app/apikey"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-gray-50 dark:bg-slate-800/80 hover:bg-gray-100 dark:hover:bg-slate-800 border border-gray-200 dark:border-slate-700 text-xs text-slate-700 dark:text-slate-200 font-medium transition-colors group"
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                    <span>Buka Google AI Studio (aistudio.google.com/app/apikey)</span>
+                  </span>
+                  <ExternalLink className="w-3.5 h-3.5 text-gray-400 group-hover:text-maroon dark:group-hover:text-red-400" />
+                </a>
+              </div>
+
+              {/* Step 2: Input API Key */}
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">
+                  2. Tempelkan Kunci API Baru Anda:
+                </label>
+                <div className="relative">
+                  <input
+                    type={showApiKeyText ? "text" : "password"}
+                    value={apiKeyInput}
+                    onChange={(e) => setApiKeyInput(e.target.value)}
+                    placeholder="Tempel API Key di sini (AIzaSy...)"
+                    className="w-full bg-white dark:bg-slate-950 border border-gray-300 dark:border-slate-700 rounded-xl px-3.5 py-2.5 pr-10 text-xs font-mono text-slate-900 dark:text-slate-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-maroon/20 dark:focus:ring-red-500/20 focus:border-maroon dark:focus:border-red-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowApiKeyText(!showApiKeyText)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-slate-600 dark:hover:text-slate-300"
+                  >
+                    {showApiKeyText ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Status Message */}
+              {apiKeyMessage && (
+                <div 
+                  className={cn(
+                    "p-3 rounded-xl text-xs flex items-center gap-2",
+                    apiKeyMessage.type === 'success'
+                      ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900/60"
+                      : "bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-900/60"
+                  )}
+                >
+                  {apiKeyMessage.type === 'success' ? (
+                    <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+                  ) : (
+                    <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 flex-shrink-0" />
+                  )}
+                  <span>{apiKeyMessage.text}</span>
+                </div>
+              )}
+
+              {/* Footer Actions */}
+              <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-slate-800">
+                {customApiKey ? (
+                  <button
+                    type="button"
+                    onClick={handleRemoveApiKey}
+                    className="text-xs text-red-600 hover:text-red-700 dark:text-red-400 hover:underline"
+                  >
+                    Hapus Kunci Tersimpan
+                  </button>
+                ) : (
+                  <span className="text-[11px] text-gray-400 dark:text-slate-500">
+                    Tersimpan lokal di browser Anda
+                  </span>
+                )}
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsApiKeyModalOpen(false)}
+                    className="px-3.5 py-2 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+                  >
+                    Tutup
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSaveApiKey(apiKeyInput)}
+                    className="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-maroon hover:bg-maroon-dark dark:bg-red-600 dark:hover:bg-red-500 shadow-sm transition-colors flex items-center gap-1.5"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                    <span>Simpan Kunci</span>
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Footer with Copyright (#580001) */}
       <footer 

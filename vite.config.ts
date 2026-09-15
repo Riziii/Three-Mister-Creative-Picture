@@ -5,7 +5,9 @@ import {defineConfig, loadEnv} from 'vite';
 
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, '.', '');
-  const apiKey = env.GEMINI_API_KEY || env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || '';
+  const isProd = mode === 'production';
+  // In production builds (outputted to docs/), do NOT bake raw secret into bundle files to prevent GitHub Secret Scanning leaks
+  const devApiKey = isProd ? '' : (env.GEMINI_API_KEY || process.env.GEMINI_API_KEY || '');
   return {
     base: './',
     plugins: [react(), tailwindcss()],
@@ -14,7 +16,7 @@ export default defineConfig(({mode}) => {
       emptyOutDir: true,
     },
     define: {
-      'process.env.GEMINI_API_KEY': JSON.stringify(apiKey),
+      'process.env.GEMINI_API_KEY': JSON.stringify(devApiKey),
       'process.env': {},
     },
     resolve: {
