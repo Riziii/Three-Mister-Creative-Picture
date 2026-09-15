@@ -13,8 +13,7 @@ import {
   ChevronRight,
   RefreshCw,
   Sun,
-  Moon,
-  Clock
+  Moon
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@/src/lib/utils";
@@ -77,51 +76,6 @@ export default function App() {
   const toggleTheme = () => {
     setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
   };
-
-  // Format waktu WIB (Waktu Indonesia Barat - UTC+7)
-  const formatWibTime = (date = new Date()) => {
-    const rawTime = new Intl.DateTimeFormat('id-ID', {
-      timeZone: 'Asia/Jakarta',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false
-    }).format(date);
-    const timeStr = rawTime.replace(/\./g, ':') + ' WIB';
-
-    const dateStr = new Intl.DateTimeFormat('id-ID', {
-      timeZone: 'Asia/Jakarta',
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    }).format(date);
-
-    return {
-      full: `${dateStr} • ${timeStr}`,
-      time: timeStr
-    };
-  };
-
-  const formatWibHistoryTime = (timestamp: number) => {
-    const raw = new Intl.DateTimeFormat('id-ID', {
-      timeZone: 'Asia/Jakarta',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    }).format(new Date(timestamp));
-    return raw.replace(/\./g, ':') + ' WIB';
-  };
-
-  const [currentWibTime, setCurrentWibTime] = useState(() => formatWibTime());
-
-  // Real-time ticker setiap detik untuk jam WIB
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentWibTime(formatWibTime());
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -344,15 +298,6 @@ export default function App() {
               </button>
             </div>
 
-            {/* Jam WIB di Header */}
-            <div 
-              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-zinc-800 bg-gray-50/90 dark:bg-zinc-900/90 text-slate-700 dark:text-zinc-300 shadow-2xs text-xs font-mono font-medium select-none"
-              title="Waktu Indonesia Barat (WIB / UTC+7)"
-            >
-              <Clock className="w-3.5 h-3.5 text-maroon dark:text-red-400" />
-              <span className="tabular-nums">{currentWibTime.time}</span>
-            </div>
-
             {/* Tombol Mode Siang / Malam */}
             <button
               onClick={toggleTheme}
@@ -570,7 +515,7 @@ export default function App() {
                             {item.prompt}
                           </p>
                           <p className="text-[10px] text-gray-400 dark:text-zinc-500">
-                            {formatWibHistoryTime(item.timestamp)}
+                            {new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </p>
                         </div>
                       </div>
@@ -615,7 +560,7 @@ export default function App() {
                             {item.query}
                           </p>
                           <p className="text-[10px] text-gray-400 dark:text-zinc-500">
-                            {item.results.length} hasil • {formatWibHistoryTime(item.timestamp)}
+                            {item.results.length} hasil • {new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </p>
                         </div>
                         <Search className="w-3 h-3 text-gray-400 dark:text-zinc-500" />
